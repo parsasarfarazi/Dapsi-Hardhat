@@ -13,7 +13,7 @@ contract Dapsi {
         string clientName;
         bool hasRequest;
     }
-    Client[] private clients;
+    Client[] public clients;
     mapping (address => uint) clientIndex;
     mapping (address => bool) isClient;
     //client stuff
@@ -24,7 +24,7 @@ contract Dapsi {
         string driverName;
         bool inRequest;
     }
-    Driver[] private drivers;
+    Driver[] public drivers;
     mapping (address => uint) driverIndex;
     mapping (address => bool) isDriver;
     //driver stuff
@@ -37,6 +37,7 @@ contract Dapsi {
         }
         else {
             require(isClient[msg.sender] == false, "you are already a client");
+            require(isDriver[msg.sender] == false, "you are already a driver");
             _;
         }
     }
@@ -45,12 +46,11 @@ contract Dapsi {
        if (yo) {
             require(isDriver[msg.sender] == true, "not a driver");
             require(drivers[driverIndex[msg.sender]].inRequest == false, "you are already in request");
-            
-
             _;         
        }
        else {
             require(isDriver[msg.sender] == false, "you are already a driver");
+            require(isClient[msg.sender] == false, "you are already a client");
             _;
        }
     }
@@ -73,15 +73,15 @@ contract Dapsi {
     }
 
     function signUpDriver(string memory _name) public driverModifier(false){
-        clients.push(Client(msg.sender, _name, false));
-        isClient[msg.sender] = true;
+        drivers.push(Driver(msg.sender, _name, false));
+        isDriver[msg.sender] = true;
         driverIndex[msg.sender] = drivers.length;
     }
 
 
    function requestTravel(string memory mabda, string memory maghsad) public clientModifier(true) {
 
-        requests.push(Request(msg.sender ,mabda, maghsad, 10));
+        requests.push(Request(msg.sender , mabda, maghsad, 10));
         clients[clientIndex[msg.sender]].hasRequest = true;
         emit travelRequested(msg.sender, mabda, maghsad, 10);
         
@@ -94,15 +94,14 @@ contract Dapsi {
         Request memory request = requests[_requestIndex];
         drivers[driverIndex[msg.sender]].inRequest = true;
         clients[clientIndex[request.clientAddress]].hasRequest = false;
-        remove(_requestIndex);
         emit requestAccepted(request.clientAddress, msg.sender, request.mabda, request.maghsad, request.price);
-
+        remove(_requestIndex);
    } 
 
     function remove(uint index) internal  {
-        if (index >= clients.length) return;
-        for (uint i = index; i<clients.length-1; i++){
-            clients[i] = clients[i+1];
+        if (index >= requests.length) return;
+        for (uint i = index; i<requests.length-1; i++){
+            requests[i] = requests[i+1];
         }
             
             
