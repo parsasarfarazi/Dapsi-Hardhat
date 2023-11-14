@@ -5,13 +5,14 @@ pragma solidity ^0.8.21;
 
 contract Dapsi {
 
+    event requestAccepted(address indexed client, address indexed driver, string mabda, string maghsad, uint price);
+    event travelRequested(address indexed client, string mabda, string maghsad, uint price);
     //client stuff
     struct Client  {
         address clientAddress;
         string clientName;
         bool hasRequest;
     }
-
     Client[] private clients;
     mapping (address => uint) clientIndex;
     mapping (address => bool) isClient;
@@ -44,6 +45,7 @@ contract Dapsi {
        if (yo) {
             require(isDriver[msg.sender] == true, "not a driver");
             require(drivers[driverIndex[msg.sender]].inRequest == false, "you are already in request");
+            
 
             _;         
        }
@@ -56,12 +58,12 @@ contract Dapsi {
     // request stuff
     struct Request {
         address clientAddress;
-        address driverAddress;
         string mabda;
         string maghsad;
         uint256 price;
     }
     Request[] public requests;
+    
     //request stuff
 
     function signUpClient(string memory _name) public clientModifier(false) {
@@ -79,16 +81,30 @@ contract Dapsi {
 
    function requestTravel(string memory mabda, string memory maghsad) public clientModifier(true) {
 
-        requests.push(Request(msg.sender, msg.sender ,mabda, maghsad, 10));
+        requests.push(Request(msg.sender ,mabda, maghsad, 10));
         clients[clientIndex[msg.sender]].hasRequest = true;
+        emit travelRequested(msg.sender, mabda, maghsad, 10);
         
    }
    
    //function generateBid()  private   {
    //}
 
-   function acceptRequest(uint256 _requestId) public driverModifier(true) {
+   function acceptRequest(uint256 _requestIndex) public driverModifier(true) {
+        Request memory request = requests[_requestIndex];
+        drivers[driverIndex[msg.sender]].inRequest = true;
+        clients[clientIndex[request.clientAddress]].hasRequest = false;
+        remove(_requestIndex);
+        emit requestAccepted(request.clientAddress, msg.sender, request.mabda, request.maghsad, request.price);
 
-   }
-  
+   } 
+
+    function remove(uint index) internal  {
+        if (index >= clients.length) return;
+        for (uint i = index; i<clients.length-1; i++){
+            clients[i] = clients[i+1];
+        }
+            
+            
+    }
 }
