@@ -14,7 +14,7 @@ contract Dapsi {
         bool hasRequest;
     }
     Client[] public clients;
-    mapping (address => uint) clientIndex;
+    mapping (address => uint) public clientIndex;
     mapping (address => bool) isClient;
     //client stuff
 
@@ -57,6 +57,7 @@ contract Dapsi {
 
     // request stuff
     struct Request {
+
         address clientAddress;
         string mabda;
         string maghsad;
@@ -69,13 +70,13 @@ contract Dapsi {
     function signUpClient(string memory _name) public clientModifier(false) {
         clients.push(Client(msg.sender, _name, false));
         isClient[msg.sender] = true;
-        clientIndex[msg.sender] = clients.length;
+        clientIndex[msg.sender] = clients.length - 1;
     }
 
     function signUpDriver(string memory _name) public driverModifier(false){
         drivers.push(Driver(msg.sender, _name, false));
         isDriver[msg.sender] = true;
-        driverIndex[msg.sender] = drivers.length;
+        driverIndex[msg.sender] = drivers.length - 1;
     }
 
 
@@ -91,6 +92,7 @@ contract Dapsi {
    //}
 
    function acceptRequest(uint256 _requestIndex) public driverModifier(true) {
+        //require(requests[_requestIndex] > 0 , "not a");
         Request memory request = requests[_requestIndex];
         drivers[driverIndex[msg.sender]].inRequest = true;
         clients[clientIndex[request.clientAddress]].hasRequest = false;
@@ -100,7 +102,7 @@ contract Dapsi {
 
     function remove(uint index) internal  {
         if (index >= requests.length) return;
-        for (uint i = index; i<requests.length-1; i++){
+        for (uint i = index; i < requests.length-1; i++){
             requests[i] = requests[i+1];
         }
             
